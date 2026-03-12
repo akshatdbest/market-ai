@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+<title>AI Market Intelligence Dashboard</title>
+
+<style>
+
+body{
+background:#0f172a;
+color:white;
+font-family:Arial;
+margin:0;
+padding:20px;
+}
+
+h1{
+text-align:center;
+margin-bottom:20px;
+}
+
+.container{
+display:flex;
+gap:20px;
+}
+
+.left{
+width:35%;
+}
+
+.right{
+width:65%;
+}
+
+.card{
+background:#1e293b;
+padding:15px;
+border-radius:10px;
+margin-bottom:15px;
+}
+
+.row{
+display:flex;
+justify-content:space-between;
+margin-bottom:8px;
+}
+
+.green{color:#22c55e;}
+.red{color:#ef4444;}
+
+.news{
+font-size:14px;
+margin-bottom:6px;
+border-bottom:1px solid #334155;
+padding-bottom:4px;
+}
+
+.level{
+display:flex;
+justify-content:space-between;
+margin-top:10px;
+font-size:16px;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<h1>AI Market Intelligence Dashboard</h1>
+
+<div class="container">
+
+<div class="left">
+
+<div class="card">
+<h3>Global Markets</h3>
+
+<div class="row"><span>S&P500</span><span id="sp500">-</span></div>
+<div class="row"><span>Nasdaq</span><span id="nasdaq">-</span></div>
+<div class="row"><span>Nikkei</span><span id="nikkei">-</span></div>
+<div class="row"><span>Hang Seng</span><span id="hangseng">-</span></div>
+
+</div>
+
+
+<div class="card">
+<h3>Macro</h3>
+
+<div class="row"><span>DXY</span><span id="dxy">-</span></div>
+<div class="row"><span>US10Y</span><span id="bond">-</span></div>
+<div class="row"><span>Crude</span><span id="crude">-</span></div>
+
+</div>
+
+
+<div class="card">
+<h3>AI Prediction</h3>
+
+<div id="prediction">-</div>
+<div id="probability"></div>
+
+</div>
+
+
+<div class="card">
+<h3>AI Market Reasoning</h3>
+<div id="reasoning"></div>
+</div>
+
+
+<!-- NEW SECTION ADDED -->
+
+<div class="card">
+<h3>AI Trade Setup</h3>
+
+<div id="tradeSetup"></div>
+
+</div>
+
+
+<div class="card">
+<h3>Market News</h3>
+<div id="news"></div>
+</div>
+
+</div>
+
+
+<div class="right">
+
+<div class="card">
+
+<h3>Nifty Support / Resistance</h3>
+
+<div class="level">
+<span>Current</span>
+<span id="niftyCurrent">-</span>
+</div>
+
+<div class="level">
+<span>Support</span>
+<span id="niftySupport">-</span>
+</div>
+
+<div class="level">
+<span>Resistance</span>
+<span id="niftyResistance">-</span>
+</div>
+
+</div>
+
+
+<div class="card">
+
+<h3>BankNifty Support / Resistance</h3>
+
+<div class="level">
+<span>Current</span>
+<span id="bankCurrent">-</span>
+</div>
+
+<div class="level">
+<span>Support</span>
+<span id="bankSupport">-</span>
+</div>
+
+<div class="level">
+<span>Resistance</span>
+<span id="bankResistance">-</span>
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+
+<script>
+
+function updateIndex(id,obj){
+
+if(!obj) return
+
+let color=obj.change>=0?"green":"red"
+
+document.getElementById(id).innerHTML =
+obj.price + " <span class='"+color+"'>(" + obj.change + "%)</span>"
+
+}
+
+
+async function loadDashboard(){
+
+const res = await fetch("http://127.0.0.1:8000/market-intelligence")
+const data = await res.json()
+
+console.log(data)
+
+
+updateIndex("sp500",data.global?.sp500)
+updateIndex("nasdaq",data.global?.nasdaq)
+updateIndex("nikkei",data.global?.nikkei)
+updateIndex("hangseng",data.global?.hangseng)
+
+updateIndex("dxy",data.macro?.dxy)
+updateIndex("bond",data.macro?.us10y_bond)
+updateIndex("crude",data.macro?.crude_oil)
+
+
+if(data.prediction){
+
+document.getElementById("prediction").innerText =
+data.prediction.direction
+
+document.getElementById("probability").innerText =
+"Confidence: " + data.prediction.probability + "%"
+
+}
+
+
+if(data.reasoning){
+
+let html=""
+
+data.reasoning.forEach(r=>{
+html += `<div class="news">• ${r}</div>`
+})
+
+document.getElementById("reasoning").innerHTML = html
+
+}
+
+
+/* NEW TRADE SETUP LOGIC */
+
+if(data.trade_setup){
+
+let ts = data.trade_setup
+
+let html = ""
+
+html += `<div class="news"><b>NIFTY</b></div>`
+html += `<div class="news">${ts.nifty.action} ${ts.nifty.entry}</div>`
+html += `<div class="news">Target: ${ts.nifty.target}</div>`
+html += `<div class="news">Stoploss: ${ts.nifty.stoploss}</div>`
+
+html += `<br>`
+
+html += `<div class="news"><b>BANKNIFTY</b></div>`
+html += `<div class="news">${ts.banknifty.action} ${ts.banknifty.entry}</div>`
+html += `<div class="news">Target: ${ts.banknifty.target}</div>`
+html += `<div class="news">Stoploss: ${ts.banknifty.stoploss}</div>`
+
+document.getElementById("tradeSetup").innerHTML = html
+
+}
+
+
+if(data.news){
+
+let html=""
+
+data.news.slice(0,10).forEach(n=>{
+html += `<div class="news">• ${n}</div>`
+})
+
+document.getElementById("news").innerHTML = html
+
+}
+
+
+if(data.levels){
+
+let ns = data.levels.nifty.support
+let nr = data.levels.nifty.resistance
+let nc = (ns+nr)/2
+
+document.getElementById("niftySupport").innerText = ns
+document.getElementById("niftyResistance").innerText = nr
+document.getElementById("niftyCurrent").innerText = nc
+
+
+let bs = data.levels.banknifty.support
+let br = data.levels.banknifty.resistance
+let bc = (bs+br)/2
+
+document.getElementById("bankSupport").innerText = bs
+document.getElementById("bankResistance").innerText = br
+document.getElementById("bankCurrent").innerText = bc
+
+}
+
+}
+
+loadDashboard()
+
+</script>
+
+</body>
+</html>

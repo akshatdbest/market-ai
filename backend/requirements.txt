@@ -1,0 +1,12 @@
+fastapi
+uvicorn
+requests
+python-dotenv
+pymongo
+beautifulsoup4
+pandas
+numpy
+scikit-learn
+schedule
+transformers
+torch

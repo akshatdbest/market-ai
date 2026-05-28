@@ -1,0 +1,12 @@
+# Docker build context
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+dist/
+build/
+.venv/
+venv/
+.env
+.DS_Store
+.pytest_cache/
